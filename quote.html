@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CutMy 木材定制报价计算器</title>
+  <meta name="description" content="CutMy 在线板材报价工具，多块板材独立配置，一键生成报价单" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --brand: #2D6A4F;
+      --brand-light: #52B788;
+      --brand-pale: #D8F3DC;
+      --accent: #E05C3A;
+      --bg: #FDF8F4;
+      --card: #FFFFFF;
+      --text: #1B1B1B;
+      --muted: #6B7280;
+      --border: #EAE0D8;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 14px 100px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .nav-bar {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .nav-btn {
+      background: white;
+      color: var(--brand);
+      border: 1.5px solid var(--brand);
+      padding: 8px 20px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+
+    .nav-btn.active {
+      background: var(--brand);
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 0 0 16px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--brand);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--brand);
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .brand-badge {
+      display: inline-block;
+      background: var(--brand-pale);
+      color: var(--brand);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .item-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .item-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px 10px;
+      background: #FFF8F5;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+
+    .item-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .item-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .item-delete {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #CCC;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .item-delete:hover {
+      color: var(--accent);
+      background: #FEF0EB;
+    }
+
+    .item-body {
+      padding: 14px;
+    }
+
+    .mat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .mat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .mat-chip {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 9px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      min-width: 62px;
+    }
+
+    .mat-chip.sel {
+      border-color: var(--accent);
+      background: #FEF0EB;
+    }
+
+    .mat-chip .mc-t {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .mat-chip .mc-p {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .mat-chip .mc-d {
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .mat-group-label {
+      font-size: 10px;
+      color: var(--brand);
+      font-weight: 700;
+      margin: 0 0 4px 2px;
+    }
+
+    .size-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .size-row label {
+      font-size: 12px;
+      color: var(--muted);
+      width: 24px;
+    }
+
+    .size-row input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      background: #FAFAFA;
+    }
+
+    .size-row .unit {
+      font-size: 12px;
+      color: var(--muted);
+      width: 26px;
+    }
+
+    .qty-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .qty-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .cnt-btn {
+      width: 32px;
+      height: 32px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cnt-btn:first-of-type {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .cnt-btn:last-of-type {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .cnt-val {
+      width: 46px;
+      height: 32px;
+      border-top: 1.5px solid var(--border);
+      border-bottom: 1.5px solid var(--border);
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .cut-row {
+      background: #F0FBF4;
+      border: 1px solid #B7E4C7;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: #2D6A4F;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .cut-row input {
+      width: 64px;
+      border: 1.5px solid #B7E4C7;
+      border-radius: 7px;
+      padding: 5px 8px;
+      font-size: 13px;
+    }
+
+    .proc-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .proc-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+
+    .proc-chip {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      background: #fff;
+    }
+
+    .proc-chip.on {
+      border-color: var(--accent);
+      background: #FEF0EB;
+      color: var(--accent);
+    }
+
+    .proc-inputs {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .proc-inp-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .proc-inp-row label {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 72px;
+    }
+
+    .proc-inp-row input {
+      width: 80px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+
+    .sand-opts {
+      display: flex;
+      gap: 5px;
+    }
+
+    .sand-opt {
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    .sand-opt.s {
+      border-color: var(--accent);
+      background: #FEF0EB;
+      font-weight: 700;
+    }
+
+    .item-subtotal {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #F7F7F7;
+      border-radius: 8px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .item-subtotal strong {
+      color: var(--accent);
+      font-size: 15px;
+    }
+
+    .add-btn {
+      width: 100%;
+      border: 2px dashed var(--border);
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 14px;
+      color: var(--brand);
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .ship-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ship-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ship-btn {
+      flex: 1;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .ship-btn.sel {
+      border-color: var(--accent);
+      background: #FEF0EB;
+    }
+
+    .ship-btn .s-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .ship-btn .s-price {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 3px;
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, #C1440E 0%, #7C2D12 100%);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      color: #fff;
+      margin-bottom: 14px;
+    }
+
+    .result-label {
+      font-size: 13px;
+      opacity: .75;
+    }
+
+    .result-total {
+      font-size: 44px;
+      font-weight: 900;
+      margin: 6px 0 14px;
+    }
+
+    .result-breakdown {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 11px 12px;
+    }
+
+    .bd-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      padding: 3px 0;
+    }
+
+    .bd-row.bd-sub {
+      font-size: 11.5px;
+      opacity: .7;
+      padding-left: 12px;
+    }
+
+    .bd-row.bd-total {
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      margin-top: 6px;
+      padding-top: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .copy-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .reset-btn {
+      width: 100%;
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #7C2D12;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 20px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all .3s;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .client-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .client-header {
+      background: var(--brand-pale);
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .client-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-row label {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 68px;
+    }
+
+    .field-row input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      background: #FAFAFA;
+    }
+
+    .field-row input.error {
+      border-color: var(--accent);
+      background: #FEF0EB;
+    }
+
+    #quote-canvas-wrap {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      width: 680px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="nav-bar">
+    <a href="quote.html" class="nav-btn active">📊 报价计算器</a>
+    <a href="index.html" class="nav-btn">📋 订单管理</a>
+  </div>
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">🌿</div>
+      <h1>CutMy 报价工具</h1>
+    </div>
+    <p>多件板材分别配置 · 加工增值自由选 · 一键生成报价单</p>
+    <span class="brand-badge">🏭 工厂直营 · 透明计价</span>
+  </header>
+
+  <div class="client-card">
+    <div class="client-header">👤 客户信息</div>
+    <div class="client-body">
+      <div class="field-row"><label>客户ID <span style="color:var(--accent);">*</span></label><input type="text"
+          id="client-id" placeholder="请输入客户编号" oninput="this.classList.remove('error')" /></div>
+      <div class="field-row"><label>联系方式</label><input type="text" id="client-contact" placeholder="手机号 / 微信号" /></div>
+      <div class="field-row"><label>报价日期</label><input type="date" id="client-date" /></div>
+    </div>
+  </div>
+
+  <div id="items-wrap"></div>
+
+  <button class="add-btn" id="add-btn" onclick="addItem()">＋ 添加板材（还可添加 <span id="add-remain">19</span> 块）</button>
+
+  <div class="ship-card">
+    <div class="section-title">🚚 运费</div>
+    <div class="ship-row">
+      <div class="ship-btn sel" data-ship="18" onclick="selectShip(this)">
+        <div class="s-name">普通快递</div>
+        <div class="s-price">¥18起</div>
+      </div>
+      <div class="ship-btn" data-ship="0" onclick="selectShip(this)">
+        <div class="s-name">自提</div>
+        <div class="s-price">免运费</div>
+      </div>
+      <div class="ship-btn" data-ship="custom" onclick="selectShip(this)">
+        <div class="s-name">大件另议</div>
+        <div class="s-price">联系确认</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="result-label">预估总价</div>
+    <div class="result-total"><span style="font-size:20px;">¥</span><span id="total-price">--</span></div>
+    <div class="result-breakdown" id="breakdown">
+      <div class="bd-row"><span>添加板材后自动计算</span></div>
+    </div>
+  </div>
+
+  <button class="copy-btn" onclick="copyQuote()">🖼 复制报价图片并提交订单</button>
+  <button class="reset-btn" onclick="resetAll()">🔄 清空重填</button>
+  <p class="note">以上为参考报价，实际以确认订单为准</p>
+
+  <footer>cutmy.cn · 工厂直营 · 品质保障<br>© 2026 CutMy</footer>
+
+  <div id="quote-canvas-wrap"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MAT = {
+      birch9: { name: '桦木多层板 9mm', price: 85 }, birch12: { name: '桦木多层板 12mm', price: 110 },
+      birch15: { name: '桦木多层板 15mm', price: 130 }, birch18: { name: '桦木多层板 18mm', price: 145 },
+      marine12: { name: '海洋板 12mm', price: 130 }, marine15: { name: '海洋板 15mm', price: 150 },
+      marine18: { name: '海洋板 18mm', price: 170 }, laminate9: { name: '免漆板 9mm', price: 85 },
+      laminate18: { name: '免漆板 18mm', price: 130 }
+    };
+    const MAT_CHIPS = [
+      { key: 'birch9', thick: '9mm', price: '¥85/㎡', desc: '书架·抽屉' }, { key: 'birch12', thick: '12mm', price: '¥110/㎡', desc: '书桌·柜体' },
+      { key: 'birch15', thick: '15mm', price: '¥130/㎡', desc: '进阶承重' }, { key: 'birch18', thick: '18mm', price: '¥145/㎡', desc: '桌面·侧板' },
+      { key: 'marine12', thick: '12mm', price: '¥130/㎡', desc: '防潮款' }, { key: 'marine15', thick: '15mm', price: '¥150/㎡', desc: '防潮进阶' },
+      { key: 'marine18', thick: '18mm', price: '¥170/㎡', desc: '防潮重载' }, { key: 'laminate9', thick: '9mm', price: '¥85/㎡', desc: '经济款' },
+      { key: 'laminate18', thick: '18mm', price: '¥130/㎡', desc: '标准款' }
+    ];
+    const SAND_PRICE = { single: 10, double: 14 };
+    const SAND_NAME = { single: '单面砂光', double: '双面砂光' };
+    const MAX_ITEMS = 20;
+    let itemCount = 0, shipMode = '18';
+
+    function addItem() {
+      if (itemCount >= MAX_ITEMS) { showToast('最多添加 20 块板材'); return; }
+      itemCount++;
+      const id = 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+      const matChipsHtml = (group, keys) => `<div class="mat-group-label">${group}</div><div class="mat-chips">` + keys.map(k => { const c = MAT_CHIPS.find(m => m.key === k); const sel = (k === 'birch9' && group === '桦木多层板') ? ' sel' : ''; return `<div class="mat-chip${sel}" data-mat="${k}" onclick="selMat('${id}',this)"><div class="mc-t">${c.thick}</div><div class="mc-p">${c.price}</div><div class="mc-d">${c.desc}</div></div>`; }).join('') + '</div>';
+      const html = `<div class="item-card" id="${id}"><div class="item-header"><div class="item-num">${itemCount}</div><div><div class="item-title">板材 ${itemCount}</div><div class="item-subtitle" id="${id}-sub">未配置</div></div><button class="item-delete" onclick="removeItem('${id}')">×</button></div><div class="item-body"><div class="mat-label">板材材料</div>${matChipsHtml('桦木多层板', ['birch9', 'birch12', 'birch15', 'birch18'])}${matChipsHtml('海洋板', ['marine12', 'marine15', 'marine18'])}${matChipsHtml('免漆家具板', ['laminate9', 'laminate18'])}<div class="size-row"><label>长</label><input type="number" id="${id}-L" placeholder="600" min="20" oninput="calc()" /><span class="unit">mm</span></div><div class="size-row"><label>宽</label><input type="number" id="${id}-W" placeholder="300" min="20" oninput="calc()" /><span class="unit">mm</span></div><div class="qty-row"><span class="qty-label">数量</span><div class="cnt-btn" onclick="chgQty('${id}',-1)">−</div><input class="cnt-val" type="number" id="${id}-Q" value="1" min="1" oninput="calc()" /><div class="cnt-btn" onclick="chgQty('${id}',1)">+</div><span class="qty-label">块</span></div><div class="cut-row"><span>✅ 直线切割（≤10刀免费）超出：</span><input type="number" id="${id}-EC" placeholder="0" min="0" oninput="calc()" /><span>刀 × ¥2</span></div><div class="proc-section-label">加工增值服务</div><div class="proc-chips"><div class="proc-chip" data-proc="drill" onclick="togProc('${id}',this)"><span class="ck">○</span> 钻孔 ¥3/孔</div><div class="proc-chip" data-proc="round" onclick="togProc('${id}',this)"><span class="ck">○</span> 圆角 ¥5/角</div><div class="proc-chip" data-proc="sand" onclick="togProc('${id}',this)"><span class="ck">○</span> 砂光 ¥10起/㎡</div><div class="proc-chip" data-proc="edge" onclick="togProc('${id}',this)"><span class="ck">○</span> 封边 ¥10/米</div><div class="proc-chip" data-proc="coat" onclick="togProc('${id}',this)"><span class="ck">○</span> 涂装 ¥50/㎡</div><div class="proc-chip" data-proc="bevel" onclick="togProc('${id}',this)"><span class="ck">○</span> 工艺角度 ¥6/米</div></div><div class="proc-inputs" id="${id}-pinputs"></div><div class="item-subtotal"><span>本条小计</span><strong id="${id}-stotal">待填写</strong></div></div></div>`;
+      document.getElementById('items-wrap').insertAdjacentHTML('beforeend', html);
+      updateAddBtn(); document.getElementById(id).__mat = 'birch9'; calc();
+    }
+    function removeItem(id) { document.getElementById(id).remove(); reNumber(); updateAddBtn(); calc(); }
+    function reNumber() { document.querySelectorAll('.item-card').forEach((c, i) => { c.querySelector('.item-num').textContent = i + 1; c.querySelector('.item-title').textContent = '板材 ' + (i + 1); }); itemCount = document.querySelectorAll('.item-card').length; }
+    function updateAddBtn() { const remain = MAX_ITEMS - itemCount; document.getElementById('add-remain').textContent = remain; document.getElementById('add-btn').style.display = remain <= 0 ? 'none' : ''; }
+    function selMat(id, el) { const card = document.getElementById(id); card.querySelectorAll('.mat-chip').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); card.__mat = el.dataset.mat; calc(); }
+    function chgQty(id, d) { const inp = document.getElementById(id + '-Q'); inp.value = Math.max(1, (parseInt(inp.value) || 1) + d); calc(); }
+    function togProc(id, chipEl) { chipEl.classList.toggle('on'); chipEl.querySelector('.ck').textContent = chipEl.classList.contains('on') ? '✓' : '○'; renderProcInputs(id); calc(); }
+    function getActiveProcs(id) { const active = []; document.getElementById(id).querySelectorAll('.proc-chip.on').forEach(c => active.push(c.dataset.proc)); return active; }
+    function renderProcInputs(id) {
+      const wrap = document.getElementById(id + '-pinputs'), procs = getActiveProcs(id), saved = {};
+      wrap.querySelectorAll('[data-saveid]').forEach(el => saved[el.dataset.saveid] = el.value);
+      const savedSand = wrap.querySelector('.sand-opt.s')?.dataset.sand || 'single';
+      let html = '';
+      if (procs.includes('drill')) html += `<div class="proc-inp-row"><label>钻孔数</label><input type="number" data-saveid="${id}-drill" id="${id}-drill" placeholder="0" min="0" value="${saved[id + '-drill'] || ''}" oninput="calc()" /><span>孔 × ¥3</span></div>`;
+      if (procs.includes('round')) html += `<div class="proc-inp-row"><label>圆角数</label><input type="number" data-saveid="${id}-round" id="${id}-round" placeholder="0" min="0" value="${saved[id + '-round'] || ''}" oninput="calc()" /><span>角 × ¥5</span></div>`;
+      if (procs.includes('sand')) html += `<div class="proc-inp-row"><label>砂光</label><div class="sand-opts"><div class="sand-opt${savedSand === 'single' ? ' s' : ''}" data-sand="single" onclick="selSand('${id}',this)">单面 ¥10/㎡</div><div class="sand-opt${savedSand === 'double' ? ' s' : ''}" data-sand="double" onclick="selSand('${id}',this)">双面 ¥14/㎡</div></div></div>`;
+      if (procs.includes('edge')) { const L = parseFloat(document.getElementById(id + '-L')?.value) || 0, W = parseFloat(document.getElementById(id + '-W')?.value) || 0, p = L > 0 ? ((L + W) / 1000 * 2) : 0; html += `<div class="proc-inp-row"><label>封边周长</label><span style="flex:1;">(长+宽)×2 = ${p.toFixed(3)} 米</span><span>× ¥10/米</span></div>`; }
+      if (procs.includes('coat')) html += `<div class="proc-inp-row"><label>涂装</label><div class="sand-opts"><div class="sand-opt s" data-coat-side="single" onclick="selCoatSide('${id}',this)">单面 ¥50/㎡</div><div class="sand-opt" data-coat-side="double" onclick="selCoatSide('${id}',this)">双面 ¥100/㎡</div></div></div>`;
+      if (procs.includes('bevel')) html += `<div class="proc-inp-row"><label>工艺角度</label><input type="number" data-saveid="${id}-bevel" id="${id}-bevel" placeholder="0" min="0" step="0.1" value="${saved[id + '-bevel'] || ''}" oninput="calc()" /><span>米 × ¥6</span></div>`;
+      wrap.innerHTML = html;
+    }
+    function selSand(id, el) { el.closest('.sand-opts').querySelectorAll('.sand-opt').forEach(b => b.classList.remove('s')); el.classList.add('s'); calc(); }
+    function selCoatSide(id, el) { el.closest('.sand-opts').querySelectorAll('.sand-opt').forEach(b => b.classList.remove('s')); el.classList.add('s'); calc(); }
+    function calcItem(id) {
+      const card = document.getElementById(id), matKey = card.__mat || 'birch9', L = parseFloat(document.getElementById(id + '-L')?.value) || 0, W = parseFloat(document.getElementById(id + '-W')?.value) || 0, qty = Math.max(1, parseInt(document.getElementById(id + '-Q')?.value) || 1);
+      if (L < 20 || W < 20) { document.getElementById(id + '-stotal').textContent = L > 0 || W > 0 ? '⚠ 最小20×20mm' : '待填写'; return null; }
+      const areaSingle = (L / 1000) * (W / 1000), areaTotal = areaSingle * qty, matCost = MAT[matKey].price * areaTotal;
+      let procCost = 0;
+      const lines = [{ label: `材料 ${MAT[matKey].name}（${areaTotal.toFixed(4)}㎡）`, val: matCost }];
+      const ec = Math.max(0, parseInt(document.getElementById(id + '-EC')?.value) || 0);
+      if (ec > 0) { procCost += ec * 2; lines.push({ label: `超出切割 ${ec}刀`, val: ec * 2, sub: true }); }
+      const procs = getActiveProcs(id);
+      if (procs.includes('drill')) { const n = Math.max(0, parseInt(document.getElementById(id + '-drill')?.value) || 0), c = n * 3 * qty; procCost += c; lines.push({ label: `钻孔 ${n}孔×${qty}块`, val: c, sub: true }); }
+      if (procs.includes('round')) { const n = Math.max(0, parseInt(document.getElementById(id + '-round')?.value) || 0), c = n * 5 * qty; procCost += c; lines.push({ label: `圆角 ${n}角×${qty}块`, val: c, sub: true }); }
+      if (procs.includes('sand')) { const sandEl = document.querySelector(`#${id}-pinputs .sand-opt.s`), sandKey = sandEl ? sandEl.dataset.sand : 'single', sp = SAND_PRICE[sandKey], c = areaTotal * sp; procCost += c; lines.push({ label: `${SAND_NAME[sandKey]} ${areaTotal.toFixed(4)}㎡`, val: c, sub: true }); }
+      if (procs.includes('edge')) { const m = Math.max(0, (L / 1000 + W / 1000) * 2), c = m * 10 * qty; procCost += c; lines.push({ label: `封边 ${m.toFixed(3)}米×${qty}块`, val: c, sub: true }); }
+      if (procs.includes('coat')) { const coatEl = document.querySelector(`#${id}-pinputs [data-coat-side].s`), coatSide = coatEl ? coatEl.dataset.coatSide : 'single', coatPrice = coatSide === 'double' ? 100 : 50, c = areaTotal * coatPrice; procCost += c; lines.push({ label: `涂装 ${coatSide === 'double' ? '双面' : '单面'} ${areaTotal.toFixed(4)}㎡`, val: c, sub: true }); }
+      if (procs.includes('bevel')) { const m = Math.max(0, parseFloat(document.getElementById(id + '-bevel')?.value) || 0), c = m * 6 * qty; procCost += c; lines.push({ label: `工艺角度 ${m}米×${qty}块`, val: c, sub: true }); }
+      const subtotal = matCost + procCost;
+      document.getElementById(id + '-stotal').textContent = `¥${subtotal.toFixed(2)}`;
+      document.getElementById(id + '-sub').textContent = `${MAT[matKey].name} · ${L}×${W}mm × ${qty}块`;
+      return { id, matName: MAT[matKey].name, L, W, qty, lines, subtotal };
+    }
+    function calc() {
+      const cards = document.querySelectorAll('.item-card');
+      if (cards.length === 0) { document.getElementById('total-price').textContent = '--'; document.getElementById('breakdown').innerHTML = '<div class="bd-row"><span>请先添加板材</span></div>'; return; }
+      let grandTotal = 0; const results = [];
+      cards.forEach(c => { const r = calcItem(c.id); if (r) { grandTotal += r.subtotal; results.push(r); } });
+      let shipCost = 0, shipLabel = '运费';
+      if (shipMode === '0') { shipLabel = '运费（自提）'; shipCost = 0; }
+      else if (shipMode === 'custom') { shipLabel = '运费（大件另议）'; shipCost = null; }
+      else { shipLabel = '运费（快递）'; shipCost = 18; }
+      const total = grandTotal + (shipCost || 0);
+      let html = '';
+      results.forEach((r, i) => { html += `<div class="bd-row" style="font-weight:700;"><span>板材${i + 1}：${r.matName} ${r.L}×${r.W}mm ×${r.qty}</span><span>¥${r.subtotal.toFixed(2)}</span></div>`; r.lines.slice(1).forEach(l => { if (l.sub) html += `<div class="bd-row bd-sub"><span>${l.label}</span><span>¥${l.val.toFixed(2)}</span></div>`; }); });
+      html += `<div class="bd-row"><span>${shipLabel}</span><span>${shipCost === null ? '待定' : '¥' + shipCost.toFixed(2)}</span></div>`;
+      html += `<div class="bd-row bd-total"><span>合计（共${results.length}条）</span><span>¥${shipMode === 'custom' ? total.toFixed(2) + '+运费' : total.toFixed(2)}</span></div>`;
+      document.getElementById('breakdown').innerHTML = html;
+      document.getElementById('total-price').textContent = shipMode === 'custom' ? `${total.toFixed(0)}+` : total.toFixed(2);
+      return { results, total, grandTotal };
+    }
+    function selectShip(el) { document.querySelectorAll('.ship-btn').forEach(b => b.classList.remove('sel')); el.classList.add('sel'); shipMode = el.dataset.ship; calc(); }
+    async function copyQuote() {
+      const clientIdEl = document.getElementById('client-id');
+      if (!clientIdEl.value.trim()) { clientIdEl.classList.add('error'); showToast('⚠️ 请先填写客户ID'); return; }
+      clientIdEl.classList.remove('error');
+      const clientId = clientIdEl.value.trim(), clientContact = document.getElementById('client-contact').value.trim(), clientDate = document.getElementById('client-date').value || new Date().toISOString().split('T')[0];
+      const cards = document.querySelectorAll('.item-card');
+      if (cards.length === 0) { showToast('请先添加板材'); return; }
+      showToast('正在生成报价图片…');
+      const { results, total } = calc();
+      const wrap = document.getElementById('quote-canvas-wrap');
+      let rowsHTML = '';
+      results.forEach((r, i) => { rowsHTML += `<div style="background:#fff;border:1px solid #EAE0D8;border-radius:10px;margin-bottom:10px;overflow:hidden;"><div style="background:#F0FBF4;padding:10px 14px;display:flex;"><span style="background:#2D6A4F;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:8px;">${i + 1}</span><span style="font-weight:700;">${r.matName}</span><span style="margin-left:auto;">${r.L}×${r.W}mm × ${r.qty}块</span></div><div style="padding:10px 14px;"><div style="display:flex;justify-content:space-between;"><span>${((r.L / 1000) * (r.W / 1000) * r.qty).toFixed(4)}㎡</span><span style="color:#E05C3A;">¥${(r.lines[0]?.val || 0).toFixed(2)}</span></div>${r.lines.slice(1).map(l => `<div style="display:flex;justify-content:space-between;padding-left:12px;font-size:12px;"><span>${l.label}</span><span style="color:#E05C3A;">¥${l.val.toFixed(2)}</span></div>`).join('')}</div><div style="background:#F7F7F7;padding:8px 14px;display:flex;justify-content:space-between;"><span>小计</span><span style="font-weight:900;color:#E05C3A;">¥${r.subtotal.toFixed(2)}</span></div></div>`; });
+      wrap.innerHTML = `<div style="width:680px;background:#FDF8F4;font-family:sans-serif;padding:32px;border-radius:16px;"><div style="display:flex;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #EAE0D8;"><div style="background:#2D6A4F;width:6px;height:36px;border-radius:3px;"></div><div><div style="font-size:22px;font-weight:900;">CutMy 木材定制报价单</div><div style="font-size:12px;color:#999;">共 ${results.length} 件板材</div></div><div style="margin-left:auto;background:#2D6A4F;color:#fff;padding:5px 12px;border-radius:20px;">🏭 工厂直营</div></div><div style="background:#fff;border:1px solid #EAE0D8;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;"><div style="flex:1;"><span style="font-weight:800;">👤 ${clientId}</span>${clientContact ? `<div style="font-size:12px;color:#888;">📞 ${clientContact}</div>` : ''}</div><div style="text-align:right;"><div style="font-size:11px;color:#AAA;">报价日期</div><div style="font-weight:700;color:#2D6A4F;">${clientDate}</div></div></div>${rowsHTML}<div style="display:flex;justify-content:space-between;padding:12px 16px;background:#fff;border:1px solid #EAE0D8;border-radius:10px;"><span>🚚 ${shipMode === '0' ? '自提' : shipMode === 'custom' ? '大件另议' : '普通快递'}</span><span>${shipMode === '0' ? '¥0' : shipMode === 'custom' ? '另议' : '¥18'}</span></div><div style="display:flex;justify-content:space-between;background:linear-gradient(135deg,#C1440E,#7C2D12);border-radius:12px;padding:16px 20px;margin-top:10px;color:#fff;"><div><div>预估总价</div><div style="font-size:12px;opacity:.6;">含材料·加工·运费</div></div><div style="font-size:32px;font-weight:900;">¥${shipMode === 'custom' ? total.toFixed(0) + '+' : total}</div></div><div style="margin-top:16px;font-size:12px;color:#AAA;text-align:center;">以上为参考报价 · cutmy.cn</div></div>`;
+      try {
+        const canvas = await html2canvas(wrap.children[0], { scale: 2, backgroundColor: '#FDF8F4' });
+        canvas.toBlob(async blob => {
+          if (!blob) { showToast('图片生成失败'); return; }
+          try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); showToast('✅ 报价图片已复制'); }
+          catch { const a = document.createElement('a'); a.download = `CutMy报价单_${clientId}.png`; a.href = canvas.toDataURL('image/png'); a.click(); showToast('📥 图片已下载'); }
+        }, 'image/png');
+      } catch (e) { showToast('生成失败'); }
+    }
+    function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
+    function resetAll() { if (!confirm('确定清空？')) return; document.getElementById('items-wrap').innerHTML = ''; itemCount = 0; updateAddBtn(); document.querySelectorAll('.ship-btn').forEach(b => b.classList.remove('sel')); document.querySelector('.ship-btn[data-ship="18"]').classList.add('sel'); shipMode = '18'; document.getElementById('client-id').value = ''; document.getElementById('client-contact').value = ''; document.getElementById('client-date').value = new Date().toISOString().split('T')[0]; addItem(); }
+    document.getElementById('client-date').value = new Date().toISOString().split('T')[0];
+    addItem();
+  </script>
+</body>
+
+</html>
